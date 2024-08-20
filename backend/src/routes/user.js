@@ -17,11 +17,21 @@ router.post("/signup", async (req, res) => {
     });
     if (!existingUser) {
       const encodedPassword = await bycrypt.hash(password, 10);
-      await User.create({
+      const user = await User.create({
         username: username,
         password: encodedPassword,
       });
+      const userId = user._id;
+      const token = jwt.sign(
+        {
+          username,
+          userId,
+        },
+        JWT_SECRET
+      );
+
       res.json({
+        token,
         msg: "User created successfully",
       });
     } else {
@@ -36,7 +46,6 @@ router.post("/signup", async (req, res) => {
     });
   }
 });
-
 router.post("/signin", async (req, res) => {
   // Implemented User login logic
   try {
@@ -49,6 +58,7 @@ router.post("/signin", async (req, res) => {
         password,
         existingUser.password
       );
+      const userId = existingUser._id;
       if (!validPassword) {
         return res.json({
           msg: "your password is incorrect",
@@ -57,6 +67,7 @@ router.post("/signin", async (req, res) => {
       const token = jwt.sign(
         {
           username,
+          userId,
         },
         JWT_SECRET
       );
