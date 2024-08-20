@@ -2,28 +2,33 @@ const { JWT_SECRET } = require("../config");
 const jwt = require("jsonwebtoken");
 
 // Middleware for handling auth
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
   const token = req.headers.authorization;
-  console.log(token);
+
   if (!token) {
-    return res
-      .status(403)
-      .json({ msg: "No token provided, authorization denied" });
+    return res.status(403).json({ msg: "Authorization token missing" });
   }
 
   try {
-    const jwtToken = token.split(" ")[1]; // Assuming the format is "Bearer <token>"
+    const jwtToken = token.split(" ")[1]; // Extract token after "Bearer "
     const decodedValue = jwt.verify(jwtToken, JWT_SECRET);
 
-    if (decodedValue && decodedValue.username) {
-      req.user = decodedValue;
-      next();
-    } else {
-      res.status(403).json({ msg: "You are not authenticated" });
+    if (!decodedValue || !decodedValue.username) {
+      return res.status(403).json({ msg: "Invalid token" });
     }
-  } catch (err) {
-    res.status(403).json({ msg: "Token is not valid" });
+
+    // Fetch user from the database
+    const user = await User.findOne({ username: decodedValue.username });
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    req.user = { id: user._id, username: user.username }; // Attach user ID to req.user
+    next();
+  } catch (error) {
+    res
+      .status(403)
+      .json({ msg: "You are not authenticated", error: error.message });
   }
 }
-
 module.exports = authMiddleware;
