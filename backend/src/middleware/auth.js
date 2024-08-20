@@ -1,5 +1,6 @@
 const { JWT_SECRET } = require("../config");
 const jwt = require("jsonwebtoken");
+const { User } = require("../db");
 
 // Middleware for handling auth
 async function authMiddleware(req, res, next) {
