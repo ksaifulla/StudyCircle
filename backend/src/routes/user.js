@@ -5,6 +5,7 @@ const router = express.Router();
 const bycrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
+const authMiddleware = require("../middleware/auth");
 // User Routes
 router.post("/signup", async (req, res) => {
   // Implemented User signup logic
@@ -71,6 +72,26 @@ router.post("/signin", async (req, res) => {
       msg: "An error occurred during signin",
       error: error.message,
     });
+  }
+});
+
+router.get("/profile", authMiddleware, async (req, res) => {
+  try {
+    const username = req.user?.username; // Extract username from token
+    if (!username) {
+      return res.status(403).json({ message: "Username not found in token" });
+    }
+    const user = await User.findOne({ username }).select("-password"); // Find user by username
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json(user);
+  } catch (err) {
+    if (!res.headersSent) {
+      return res.status(500).json({ error: err.message });
+    }
   }
 });
 
