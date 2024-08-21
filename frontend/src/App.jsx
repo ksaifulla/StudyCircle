@@ -1,12 +1,12 @@
-import './App.css'
+import "./App.css";
+import Layout from "./components/Layout";
 
 function App() {
-
   return (
-    <div className='text-2xl font-semibold text-green-500'>
-    Hello World
+    <div>
+      <Layout />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
