@@ -22,8 +22,7 @@ const MainChat = () => {
   }
 
   return (
-    <div className="w-full">
-      <h1>Welcome to the Chat</h1>
+    <div className="w-full mb-10">
       <Chat userId={userId} groupId={groupId} />
     </div>
   );
