@@ -10,92 +10,104 @@ export const Auth = ({ type }) => {
     username: "",
     password: "",
   });
+  const [error, setError] = useState("");
 
   const sendRequest = async () => {
+    if (!postInputs.username || !postInputs.password) {
+      setError("Username and password are required.");
+      return;
+    }
+
     try {
       const res = await axios.post(
         `${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`,
         postInputs,
       );
-      const jwt = res.data.token;
-      localStorage.setItem("token", jwt);
-      navigate("/");
+
+      if (res.status === 200 && res.data.token) {
+        const jwt = res.data.token;
+        localStorage.setItem("token", jwt);
+        navigate("/");
+      } else {
+        throw new Error(res.data.message || "Authentication failed.");
+      }
     } catch (e) {
-      alert("Wrong Inputs");
+      setError(e.response?.data?.message || "Incorrect username or password.");
     }
   };
 
   return (
-    <div className="w-full max-w-sm p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 dark:bg-zinc-900 dark:border-gray-700">
+    <div className="w-full max-w-sm p-4 bg-zinc-900 border-gray-700 border rounded-lg shadow sm:p-6 md:p-8">
       <form className="space-y-6" action="#">
-        <h5 className="text-2xl font-medium text-gray-900 dark:text-white">
+        <h5 className="text-2xl font-medium text-white">
           {type === "signup" ? "Create an account" : "Sign in"}
         </h5>
-
+        {error && <p className="text-red-500 text-sm">{error}</p>}{" "}
         <div>
           <label
             htmlFor="username"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white"
           >
-            username
+            Username
           </label>
           <input
-            type="username"
+            type="text"
             name="username"
             id="username"
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+            className="bg-gray-600 border-gray-500 placeholder-gray-400 text-white border rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5"
             placeholder="youremail@example.com"
             required
-            onChange={(e) =>
+            onChange={(e) => {
               setPostInputs({
                 ...postInputs,
                 username: e.target.value,
-              })
-            }
+              });
+              setError("");
+            }}
           />
         </div>
         <div>
           <label
             htmlFor="password"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white"
           >
-            password
+            Password
           </label>
           <input
             type="password"
             name="password"
             id="password"
             placeholder="••••••••"
-            className="mb-7 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+            className="mb-7 bg-gray-600 border-gray-500 placeholder-gray-400 text-white border rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5"
             required
-            onChange={(e) =>
+            onChange={(e) => {
               setPostInputs({
                 ...postInputs,
                 password: e.target.value,
-              })
-            }
+              });
+              setError("");
+            }}
           />
         </div>
-
         <button
           onClick={(e) => {
             e.preventDefault();
             sendRequest();
           }}
           type="submit"
-          className="w-full text-white bg-red-700  hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
+          className="w-full text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center bg-red-600 hover:bg-red-700 focus:ring-red-800"
         >
           {type === "signup" ? "Sign up" : "Login"}
         </button>
-        <div className="text-sm font-medium text-gray-500 dark:text-gray-300">
+        <div className="text-sm font-medium text-gray-300">
           {type === "signup"
             ? "Already have an account?"
             : "Don't have an account?"}{" "}
           <Link
             to={type === "signin" ? "/signup" : "/signin"}
-            className="text-red-700 hover:underline dark:text-red-500"
+            className="text-red-700 hover:underline text-red-500"
           >
-            {type === "signup" ? "Login" : "sign up"}
+            {type === "signup" ? "Login" : "Sign up"}
           </Link>
         </div>
       </form>
