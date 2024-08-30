@@ -2,48 +2,49 @@ import { FaHashtag } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 
 export default function GroupSidebar({ groupId, name }) {
-  console.log(groupId);
   return (
-    <div className="top-10 w-56 h-screen bg-white border-r border-rose-200 dark:bg-rose-500 dark:border-rose-400">
-      <div className="text-2xl text-white font-bold bg-white dark:bg-rose-500 mb-16 pl-4 pb-3 pt-2">
-        {name}
-      </div>
-      <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-rose-500">
-        <div className="space-y-2 font-medium">
-          <SidebarElement text={"Info"} toNavigate={`/group/${groupId}`} />
-          <SidebarElement text={"Chat"} toNavigate={`/chat/${groupId}`} />
-
-          <SidebarElement text={"Media"} />
-          <SidebarElement text={"Notes"} />
-          <SidebarElement text={"Schedule"} />
+    <div className="w-56 h-full bg-soft-800 pt-4 border-r border-l border-soft-400 rounded-tl-md">
+      {!groupId ? (
+        <div className="h-full flex items-center justify-center text-white text-center px-4">
+          <p>You are not inside any groups. Create or join a group.</p>
         </div>
-      </div>
+      ) : (
+        <div className="h-full pt-20 px-3 pb-4 bg-gradient-to-b from-soft-800 to-soft-900">
+          <div className="space-y-2 font-medium">
+            <SidebarElement text={"Info"} toNavigate={`/group/${groupId}`} />
+            <SidebarElement text={"Chat"} toNavigate={`/chat/${groupId}`} />
+            <SidebarElement text={"Notes"} toNavigate={`${groupId}/notes`} />
+            <SidebarElement
+              text={"Schedules"}
+              toNavigate={`group/${groupId}/schedule`}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export const SidebarElement = ({ text, toNavigate }) => {
   const navigate = useNavigate();
-
   const handleClick = () => {
-    navigate(toNavigate);
+    if (toNavigate) {
+      navigate(toNavigate);
+    }
   };
 
   return (
     <div onClick={handleClick}>
-      <div
-        href="#"
-        className="flex items-center p-2 h-7 rounded-lg dark:bg-rose-300 hover:bg-rose-100 dark:hover:bg-rose-400 cursor-pointer"
-      >
+      <div className="flex items-center p-2 h-7 rounded-lg hover:bg-soft-400 cursor-pointer">
         <Groupsidebaricon icon={<FaHashtag size="15" />} />
-        <span className="ms-3 text-rose-600 dark:text-white">{text}</span>
+        <span className="ms-3 text-soft-100">{text}</span>
       </div>
     </div>
   );
 };
 
 export const Groupsidebaricon = ({ icon }) => (
-  <div className="flex items-center justify-center h-10 w-6 mt-2 mb-2 hover:text-white">
+  <div className="flex text-soft-100 items-center justify-center h-10 w-6 mt-2 mb-2 hover:text-white">
     {icon}
   </div>
 );
