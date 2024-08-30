@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
-const { StudyGroup, Schedule, Message } = require("../db");
+const { StudyGroup, Schedule, Message, Note } = require("../db");
 const authMiddleware = require("../middleware/auth");
 const isAdmin = require("../middleware/admin");
 
@@ -135,6 +135,75 @@ router.get("/:groupId/messages", authMiddleware, async (req, res) => {
       "username"
     );
     res.status(200).json(messages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create a new note
+router.post("/:groupId/notes", authMiddleware, async (req, res) => {
+  const { title, content, isCollaborative } = req.body;
+  try {
+    const note = new Note({
+      group: req.params.groupId,
+      author: req.user.id,
+      title,
+      content,
+      isCollaborative,
+      editors: isCollaborative ? [req.user.id] : [],
+    });
+    await note.save();
+    res.status(201).json(note);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get all notes for a group
+router.get("/:groupId/notes", authMiddleware, async (req, res) => {
+  try {
+    const notes = await Note.find({ group: req.params.groupId }).populate(
+      "author",
+      "username"
+    );
+    res.status(200).json(notes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update a note (for collaborative editing)
+router.put("/notes/:id", authMiddleware, async (req, res) => {
+  const { content } = req.body;
+  try {
+    const note = await Note.findById(req.params.id);
+    if (!note) return res.status(404).json({ message: "Note not found" });
+
+    if (note.isCollaborative && !note.editors.includes(req.user.id)) {
+      return res
+        .status(403)
+        .json({ message: "You do not have permission to edit this note" });
+    }
+
+    note.content = content;
+    note.updatedAt = Date.now();
+    await note.save();
+    res.status(200).json(note);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get a specific note by ID
+router.get("/notes/:id", authMiddleware, async (req, res) => {
+  try {
+    const note = await Note.findById(req.params.id).populate(
+      "author",
+      "username"
+    );
+    if (!note) return res.status(404).json({ message: "Note not found" });
+
+    res.status(200).json(note);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
