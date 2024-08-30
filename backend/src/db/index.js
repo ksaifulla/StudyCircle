@@ -104,15 +104,58 @@ const scheduleSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+const noteSchema = new mongoose.Schema({
+  group: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "StudyGroup",
+    required: true,
+  },
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+  isCollaborative: {
+    type: Boolean,
+    default: false,
+  },
+  editors: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
 const User = mongoose.model("User", UserSchema);
 const Role = mongoose.model("Role", roleSchema);
 const StudyGroup = mongoose.model("StudyGroup", studyGroupSchema);
 const Message = mongoose.model("Message", messageSchema);
 const Schedule = mongoose.model("Schedule", scheduleSchema);
+const Note = mongoose.model("Note", noteSchema);
+
 module.exports = {
   Role,
   User,
   StudyGroup,
   Message,
   Schedule,
+  Note,
 };
