@@ -111,6 +111,7 @@ router.put("/profile/password", authMiddleware, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
   try {
+    const username = req.user?.username;
     const user = await User.findById(req.user.id);
     const userId = user.id;
     if (!user) {
