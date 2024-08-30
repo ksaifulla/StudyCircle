@@ -1,17 +1,12 @@
 import { Outlet, useParams } from "react-router-dom";
 import GroupSidebar from "./GroupSidebar";
 
-// import Mainworkspace from "./Mainworkspace";
 export default function Workspace() {
-  const { groupId } = useParams(); // Get the groupId from the URL
+  const { groupId } = useParams();
 
   return (
-    <div className="flex flex-1">
-      {/* <!-- Second Sidebar --> */}
+    <div className="flex flex-1 h-full border-t border-soft-400 rounded-tl-lg ">
       <GroupSidebar groupId={groupId} name={"Lol"} />
-
-      {/* <!-- Main Workspace --> */}
-      {/* <Mainworkspace /> */}
       <Outlet context={{ groupId }} />
     </div>
   );
