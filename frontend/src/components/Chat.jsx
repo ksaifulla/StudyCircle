@@ -1,6 +1,8 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import useSocket from "../hooks/useSocket";
+import { ScrollArea } from "./ui/scroll-area";
+import { Separator } from "./ui/separator";
 
 const Chat = ({ userId, groupId }) => {
   const socket = useSocket("http://localhost:5000");
@@ -101,49 +103,52 @@ const Chat = ({ userId, groupId }) => {
   };
 
   return (
-    <div className="flex flex-col  h-full bg-rose-700 text-white p-4 space-y-4">
-      <ul className="flex-1 overflow-y-auto space-y-3">
-        {messages.length > 0 ? (
-          messages.map((msg, index) => {
-            const isSender = msg.sender?._id === userId;
-            return (
-              <li
-                key={index}
-                className={`flex ${isSender ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`${
-                    isSender
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-900"
-                  } max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-lg p-2`}
+    <div className="flex flex-col  h-full bg-soft-500 text-white ">
+      <div className="bg-soft-500 p-5">
+        <h2 className="text-2xl font-bold text-gray-200 mb-4">Chat</h2>
+      </div>
+      <Separator></Separator>
+      <ScrollArea>
+        <ul className="flex-1  space-y-3 p-3">
+          {messages.length > 0 ? (
+            messages.map((msg, index) => {
+              const isSender = msg.sender?._id === userId;
+              return (
+                <li
+                  key={index}
+                  className={`flex ${isSender ? "justify-end" : "justify-start"}`}
                 >
-                  <p className="text-sm">
-                    <strong>{msg.sender?.username || "Unknown User"}</strong>
-                    <span className="ml-2 text-xs text-gray-500">
-                      {new Date(msg.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </p>
-                  <p className="mt-1">{msg.content}</p>
-                </div>
-              </li>
-            );
-          })
-        ) : (
-          <li className="text-center text-gray-500">No messages yet</li>
-        )}
-      </ul>
-
+                  <div
+                    className={`${
+                      isSender ? " text-white" : " text-white"
+                    } max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-lg p-1`}
+                  >
+                    <p className="text-sm">
+                      <strong>{msg.sender?.username || "Unknown User"}</strong>
+                      <span className="ml-2 text-xs text-gray-500">
+                        {new Date(msg.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </p>
+                    <p className="mt-1">{msg.content}</p>
+                  </div>
+                </li>
+              );
+            })
+          ) : (
+            <li className="text-center text-gray-500">No messages yet</li>
+          )}
+        </ul>
+      </ScrollArea>
       {typingUser && (
         <p className="text-gray-400 text-sm italic">
           {typingUser} is typing...
         </p>
       )}
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 ">
         <input
           type="text"
           value={input}
