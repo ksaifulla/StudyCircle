@@ -12,7 +12,7 @@ const EditNote = ({ noteId, onClose }) => {
   useEffect(() => {
     const fetchNote = async () => {
       try {
-        const response = await axios.get(`/api/notes/${noteId}`, {
+        const response = await axios.get(`http://localhost:5000/api/v1/groups/notes/${noteId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
