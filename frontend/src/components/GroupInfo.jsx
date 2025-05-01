@@ -1,17 +1,25 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import CopyLink from "./CopyLink";
 import GroupInfoSkeleton from "./ui/GroupInfoSkeleton";
 import { Separator } from "./ui/separator";
+import ConfirmationModal from "./ConfirmationModal";
+import InviteModal from "./InviteModal";
+
 
 const GroupInfo = () => {
   const { groupId } = useParams();
+  const navigate = useNavigate();
 
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInviteModalOpen, setInviteModalOpen] = useState(false);
 
+  // Fetch group information on component load
   useEffect(() => {
     const fetchGroupInfo = async () => {
       try {
@@ -21,15 +29,15 @@ const GroupInfo = () => {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          },
+          }
         );
         setGroup(response.data);
       } catch (e) {
-        if (e.response && e.response.status === 403) {
-          setError("Access denied. You are not a member of this group.");
-        } else {
-          setError("Failed to load group information.");
-        }
+        setError(
+          e.response && e.response.status === 403
+            ? "Access denied. You are not a member of this group."
+            : "Failed to load group information."
+        );
       } finally {
         setLoading(false);
       }
@@ -38,51 +46,114 @@ const GroupInfo = () => {
     fetchGroupInfo();
   }, [groupId]);
 
+  // Handle leave group action
+  const handleLeaveGroup = async () => {
+    setIsLeaving(true);
+    try {
+      await axios.post(
+        `http://localhost:5000/api/v1/groups/${groupId}/leave`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      alert("You have successfully left the group.");
+      setIsModalOpen(false); // Close modal after confirmation
+      navigate("/groups"); // Redirect user to groups page or another relevant page
+    } catch (error) {
+      console.error("Failed to leave group", error);
+      alert("An error occurred while trying to leave the group.");
+    } finally {
+      setIsLeaving(false);
+    }
+  };
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  // Function to open invite modal
+  const openInviteModal = () => setInviteModalOpen(true);
+  const closeInviteModal = () => setInviteModalOpen(false);
+
   if (loading) return <GroupInfoSkeleton />;
   if (error) return <div className="text-center text-red-500">{error}</div>;
 
   return (
-    <div className="mx-auto text-white bg-gradient-to-b from-fuchsia-900 via-zinc-800 to-gray-900 shadow-lg w-full rounded-tl-lg rounded-tr-lg">
-      <div className="bg-soft-500 p-5">
-        <h2 className="text-2xl font-bold text-gray-200 mb-4">{group.name}</h2>
+    <div className="mx-auto text-white bg-gradient-to-b from-fuchsia-900 via-zinc-800 to-gray-900 shadow-2xl w-full rounded-lg overflow-hidden">
+      {/* Header Section */}
+      <div className="bg-soft-500 p-6 flex justify-between items-center rounded-t-lg">
+        <h2 className="text-4xl font-extrabold text-gray-200 mb-4">{group.name}</h2>
+        <button
+          className={`bg-purple-800 hover:bg-purple-900 text-white font-medium py-3 px-6 rounded-lg transition-opacity ${isLeaving ? "opacity-50" : ""}`}
+          onClick={openModal}
+          disabled={isLeaving}
+        >
+          {isLeaving ? "Leaving..." : "Leave Group"}
+        </button>
       </div>
-      <Separator></Separator>
-      <div className="pl-5 pr-5">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <h3 className="text-xl font-semibold text-gray-100 pt-2 pb-2">
-              Description
-            </h3>
-            <p className="text-gray-300 mb-4">
-              {group.description || "No description available."}
-            </p>
-          </div>
-          <div className="pl-5">
-            <div className="pt-2">
-              <h3 className="text-xl font-semibold text-gray-100 mb-2">
-                Share group
-              </h3>
+
+      <Separator />
+
+      {/* Group Info Section */}
+      <div className="px-6 py-6 space-y-6">
+        <div className="flex justify-between items-start space-x-8">
+          {/* Description Box */}
+          <div className="flex-1 space-y-2">
+            
+              <h3 className="text-3xl font-semibold text-gray-100 mb-4">Description</h3>
+              
+              <p className="text-gray-300 text-lg leading-relaxed">{group.description || "No description available."}</p>
+            </div>
+          
+
+          {/* Share Group Box */}
+          <div className="pl-5 space-y-4">
+            <div className="bg-soft-500 p-6 rounded-xl shadow-lg">
+              <h3 className="text-2xl font-semibold textl-gray-100 mb-4">Share Group</h3>
               <CopyLink groupId={groupId} />
             </div>
           </div>
         </div>
       </div>
-      <div className="pl-5">
-        <h3 className="text-xl font-semibold text-gray-100 pt-5">Members</h3>
-        <ul className="mt-2 space-y-2">
-          {group.members.map((member) => (
-            <li key={member._id} className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">
+
+      {/* Members Box */}
+      <div className="px-6 py-6">
+        
+          <h3 className="text-3xl font-semibold text-gray-100 mb-4">Members</h3>
+          <ul className="space-y-6 mt-4">
+            {group.members.map((member) => (
+              <li key={member._id} className="flex items-center space-x-6">
+                <div className="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center text-xl font-bold text-gray-700">
                   {member.username.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <span className="text-gray-300">{member.username}</span>
-            </li>
-          ))}
-        </ul>
+                </div>
+                <span className="text-gray-300 text-xl font-medium">{member.username}</span>
+              </li>
+            ))}
+          </ul>
+        
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onConfirm={handleLeaveGroup}
+        onCancel={closeModal}
+      />
+
+      {/* Invite Modal (If you want to enable this feature, uncomment below) */}
+      {/* <button
+        onClick={openInviteModal}
+        className="bg-blue-600 text-white py-2 px-6 rounded-lg mt-4 ml-6 transition-all hover:bg-blue-700"
+      >
+        Invite Members
+      </button>
+      <InviteModal isOpen={isInviteModalOpen} onClose={closeInviteModal} groupId={groupId} /> */}
+
+      
     </div>
+    
   );
 };
 

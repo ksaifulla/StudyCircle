@@ -6,6 +6,7 @@ module.exports = {
     "./components/**/*.{js,jsx}",
     "./app/**/*.{js,jsx}",
     "./src/**/*.{js,jsx}",
+    'node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}'
   ],
   prefix: "",
   theme: {
@@ -30,6 +31,10 @@ module.exports = {
           800: "#15171a",
           900: "#111316",
         },
+        customPurple: {
+            100: '#2b2738',
+            200: '#3b364c',
+          },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -85,5 +90,6 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), ('flowbite/plugin')],
+
 };

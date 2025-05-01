@@ -1,6 +1,0 @@
-
-module.exports = {
-  JWT_SECRET: 'UR_JWT_SECRET',
-  MONGODB_URL:
-    'UR_MONGODB_URL',
-}

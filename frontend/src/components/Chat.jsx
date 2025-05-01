@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import useSocket from "../hooks/useSocket";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
+import EmojiPicker from 'emoji-picker-react'; // Importing the EmojiPicker component
 
 const Chat = ({ userId, groupId }) => {
   const socket = useSocket("http://localhost:5000");
@@ -10,6 +11,7 @@ const Chat = ({ userId, groupId }) => {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [typingUser, setTypingUser] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false); // State to manage the emoji picker visibility
 
   useEffect(() => {
     if (!socket) {
@@ -40,7 +42,6 @@ const Chat = ({ userId, groupId }) => {
     socket.emit("joinGroup", { groupId, userId });
 
     socket.on("receiveMessage", (message) => {
-      console.log("Received message:", message);
       setMessages((prev) => [...prev, message]);
     });
 
@@ -52,14 +53,10 @@ const Chat = ({ userId, groupId }) => {
       setTypingUser("");
     });
 
-    socket.on("error", (error) => {
-      alert(error.message);
-    });
     return () => {
       socket.off("receiveMessage");
       socket.off("userTyping");
       socket.off("userStoppedTyping");
-      socket.off("error");
     };
   }, [socket, groupId]);
 
@@ -85,31 +82,34 @@ const Chat = ({ userId, groupId }) => {
 
     if (e.target.value === "") {
       setTyping(false);
-      socket.emit("stopTyping", {
-        groupId,
-        userId,
-      });
+      socket.emit("stopTyping", { groupId, userId });
     }
   };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       sendMessage();
-      socket.emit("stopTyping", {
-        groupId,
-        userId,
-      });
+      socket.emit("stopTyping", { groupId, userId });
     }
   };
 
+  const handleEmojiClick = (emoji) => {
+    setInput((prevInput) => prevInput + emoji.emoji); // Append selected emoji to input
+    setShowEmojiPicker(false); // Close the emoji picker after selecting an emoji
+  };
+
+  const toggleEmojiPicker = () => {
+    setShowEmojiPicker((prev) => !prev); // Toggle emoji picker visibility
+  };
+
   return (
-    <div className="flex flex-col  h-full bg-soft-500 text-white ">
+    <div className="flex flex-col h-full bg-soft-500 text-white">
       <div className="bg-soft-500 p-5">
         <h2 className="text-2xl font-bold text-gray-200 mb-4">Chat</h2>
       </div>
-      <Separator></Separator>
+      <Separator />
       <ScrollArea>
-        <ul className="flex-1  space-y-3 p-3">
+        <ul className="flex-1 space-y-3 p-3">
           {messages.length > 0 ? (
             messages.map((msg, index) => {
               const isSender = msg.sender?._id === userId;
@@ -120,7 +120,7 @@ const Chat = ({ userId, groupId }) => {
                 >
                   <div
                     className={`${
-                      isSender ? " text-white" : " text-white"
+                      isSender ? "text-white" : "text-white"
                     } max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-lg p-1`}
                   >
                     <p className="text-sm">
@@ -148,7 +148,15 @@ const Chat = ({ userId, groupId }) => {
         </p>
       )}
 
-      <div className="flex items-center space-x-2 ">
+      <div className="relative flex items-center space-x-2"> {/* Add relative positioning for emoji picker */}
+        <button onClick={toggleEmojiPicker} className="p-2 text-lg">
+          😊
+        </button>
+        {showEmojiPicker && (
+          <div className="absolute bottom-12 left-0 z-10">
+            <EmojiPicker onEmojiClick={handleEmojiClick} />
+          </div>
+        )}
         <input
           type="text"
           value={input}

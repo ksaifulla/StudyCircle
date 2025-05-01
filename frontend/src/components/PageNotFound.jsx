@@ -7,10 +7,10 @@ export default function PageNotFound() {
             404
           </h1>
           <p className="mb-4 text-3xl font-bold tracking-tight  md:text-4xl text-white">
-            Oops! That page can’t be found
+            Oops! The page can’t be found
           </p>
           <p className="mb-4 text-lg font-light text-gray-400">
-            The page you are looking for it maybe deleted
+            The page you are looking for maybe deleted
           </p>
         </div>
       </div>

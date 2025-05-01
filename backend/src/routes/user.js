@@ -6,10 +6,44 @@ const bycrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
 const authMiddleware = require("../middleware/auth");
+const multer = require("multer");
+const path = require("path");
+
+// Configure multer for profile picture uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/profile-pictures/"); // Directory for uploaded files
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${req.user.id}-${Date.now()}${path.extname(file.originalname)}`);
+  },
+});
+
+// Filter to allow only image files
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = /jpeg|jpg|png/;
+  const isMimeTypeValid = allowedTypes.test(file.mimetype);
+  const isExtNameValid = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+
+  if (isMimeTypeValid && isExtNameValid) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only .jpeg, .jpg, and .png formats are allowed!"));
+  }
+};
+
+// Initialize multer middleware
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 2 * 1024 * 1024 }, // Limit file size to 2MB
+});
+
 // User Routes
 router.post("/signup", async (req, res) => {
   // Implemented User signup logic
   try {
+    const name = req.body.name;
     const username = req.body.username;
     const password = req.body.password;
     const existingUser = await User.findOne({
@@ -18,6 +52,7 @@ router.post("/signup", async (req, res) => {
     if (!existingUser) {
       const encodedPassword = await bycrypt.hash(password, 10);
       const user = await User.create({
+        name: name,
         username: username,
         password: encodedPassword,
       });
@@ -86,25 +121,25 @@ router.post("/signin", async (req, res) => {
   }
 });
 
-router.get("/profile", authMiddleware, async (req, res) => {
-  try {
-    const username = req.user?.username; // Extract username from token
-    if (!username) {
-      return res.status(403).json({ message: "Username not found in token" });
-    }
-    const user = await User.findOne({ username }).select("-password"); // Find user by username
+// router.get("/profile", authMiddleware, async (req, res) => {
+//   try {
+//     const username = req.user?.username; // Extract username from token
+//     if (!username) {
+//       return res.status(403).json({ message: "Username not found in token" });
+//     }
+//     const user = await User.findOne({ username }).select("-password"); // Find user by username
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
 
-    return res.status(200).json(user);
-  } catch (err) {
-    if (!res.headersSent) {
-      return res.status(500).json({ error: err.message });
-    }
-  }
-});
+//     return res.status(200).json(user);
+//   } catch (err) {
+//     if (!res.headersSent) {
+//       return res.status(500).json({ error: err.message });
+//     }
+//   }
+// });
 
 // Update user password
 router.put("/profile/password", authMiddleware, async (req, res) => {
@@ -146,5 +181,56 @@ router.put("/profile/password", authMiddleware, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+router.get("/profile", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    res.json(user);
+  } catch (err) {
+    console.error("Error fetching profile:", err.message);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
+// Route to update user profile (PUT)
+router.put("/profile", authMiddleware, upload.single("profilePicture"), async (req, res) => {
+  const { username, bio, name } = req.body;
+  const profilePicture = req.file ? `/uploads/profile-pictures/${req.file.filename}` : undefined;
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });   
+    }
+
+    // Update fields if provided
+    if (username) user.username = username;
+    if (bio) user.bio = bio;
+    if (name) user.name = name;  // Add the name field update
+    if (profilePicture) user.profilePicture = profilePicture;
+
+    await user.save();
+
+    const updatedUser = {
+      username: user.username,
+      bio: user.bio,
+      name: user.name,  // Include name in the response
+      profilePicture: user.profilePicture,
+    };
+
+    res.json({ message: "Profile updated successfully", user: updatedUser });
+  } catch (err) {
+    console.error("Error updating profile:", err.message);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
+
+
+
+
 
 module.exports = router;

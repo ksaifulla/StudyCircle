@@ -5,6 +5,11 @@ const { MONGODB_URL } = require("../config");
 mongoose.connect(MONGODB_URL);
 // Defined schemas
 const UserSchema = new mongoose.Schema({
+  name: {
+    type:String,
+    required: true,
+
+  },
   username: {
     type: String,
     required: true,
@@ -23,6 +28,12 @@ const UserSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  bio: {
+    type: String,
+  },
+  profilePicture: {
+    type: String,
   },
 });
 
@@ -144,12 +155,101 @@ const noteSchema = new mongoose.Schema({
   },
 });
 
+const fileSchema = new mongoose.Schema({
+  filename: { type: String, required: true },
+  path: { type: String, required: true },
+  groupId: { type: String, required: true },  // Ensure this field matches your use case
+  title: {type: String, required: true},
+  size: { type: Number, required: true },
+  timestamp: {type: Date, default: Date.now},
+});
+
+const inviteSchema = new mongoose.Schema({
+  token: { type: String, required: true, unique: true },
+  group: { type: mongoose.Schema.Types.ObjectId, ref: "StudyGroup", required: true },
+  inviter: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  expiresAt: { type: Date, required: true },
+});
+
+const questionSchema = new mongoose.Schema({
+  questionText: { type: String, required: true },
+  options: [
+    {
+      text: { type: String, required: true },
+      isCorrect: { type: Boolean, required: true },
+    },
+  ],
+});
+
+const quizSchema = new mongoose.Schema({
+  group: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "StudyGroup",
+    required: true,
+  },
+  title: { 
+    type: String, 
+    required: true 
+  },
+  description: { 
+    type: String 
+  },
+  questions: [questionSchema],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  createdAt: { 
+    type: Date, 
+    default: Date.now 
+  },
+});
+
+const answerSchema = new mongoose.Schema({
+  questionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
+  selectedOption: {
+    type: String,
+    required: true,
+  },
+});
+
+const quizAttemptSchema = new mongoose.Schema({
+  quiz: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Quiz",
+    required: true,
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  answers: [answerSchema],
+  score: {
+    type: Number,
+    required: true,
+  },
+  attemptedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+
 const User = mongoose.model("User", UserSchema);
 const Role = mongoose.model("Role", roleSchema);
 const StudyGroup = mongoose.model("StudyGroup", studyGroupSchema);
 const Message = mongoose.model("Message", messageSchema);
 const Schedule = mongoose.model("Schedule", scheduleSchema);
 const Note = mongoose.model("Note", noteSchema);
+const File = mongoose.model("File", fileSchema);
+const Invite = mongoose.model("Invite", inviteSchema);
+const Quiz = mongoose.model("Quiz", quizSchema);
+const QuizAttempt = mongoose.model("QuizAttempt", quizAttemptSchema);
 
 module.exports = {
   Role,
@@ -158,4 +258,8 @@ module.exports = {
   Message,
   Schedule,
   Note,
+  File,
+  Invite,
+  Quiz,
+  QuizAttempt
 };
