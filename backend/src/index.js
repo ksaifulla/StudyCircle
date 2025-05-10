@@ -6,14 +6,14 @@ const initializeSocket = require("./utils/socket");
 const userRouter = require("./routes/user");
 const groupRouter = require("./routes/groups");
 const fileUploadRoutes = require("./routes/fileUpload");
-const {PORT} = require("./config")
+const {PORT, FRONTEND_URL} = require("./config")
 
 
 const app = express();
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: FRONTEND_URL,
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));

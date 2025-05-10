@@ -1,10 +1,11 @@
 const socketIo = require("socket.io");
 const { Message, User, StudyGroup } = require("../db");
+const { FRONTEND_URL } = require("../config");
 
 const initializeSocket = (server) => {
   const io = socketIo(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: FRONTEND_URL,
       methods: ["GET", "POST"],
       credentials: true,
     },
