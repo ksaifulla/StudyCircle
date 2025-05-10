@@ -5,7 +5,7 @@ const { FRONTEND_URL } = require("../config");
 const initializeSocket = (server) => {
   const io = socketIo(server, {
     cors: {
-      origin: FRONTEND_URL,
+      origin: true,
       methods: ["GET", "POST"],
       credentials: true,
     },
