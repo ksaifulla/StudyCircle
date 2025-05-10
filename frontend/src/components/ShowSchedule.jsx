@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { BACKEND_URL } from '../config';
 
 const GroupSchedules = ({ groupId }) => {
   const [schedules, setSchedules] = useState([]);
@@ -9,7 +10,7 @@ const GroupSchedules = ({ groupId }) => {
     const fetchSchedules = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/v1/groups/${groupId}/schedules`,
+          `${BACKEND_URL}/api/v1/groups/${groupId}/schedules`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,

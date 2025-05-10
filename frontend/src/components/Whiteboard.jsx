@@ -1,9 +1,10 @@
-import React, { useRef, useEffect, useState } from 'react';
-import useSocket from '../hooks/useSocket';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { BACKEND_URL } from '../config';
+import useSocket from '../hooks/useSocket';
 
 const Whiteboard = () => {
-  const socket = useSocket('http://localhost:5000');
+  const socket = useSocket(BACKEND_URL);
   const { groupId } = useParams();
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { AiFillFileImage, AiFillFilePdf } from 'react-icons/ai';
+import { FaFileAlt, FaFilePowerpoint, FaFileWord } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
-import { AiFillFilePdf, AiFillFileImage } from 'react-icons/ai';
-import { FaFileWord, FaFilePowerpoint, FaFileAlt } from 'react-icons/fa';
+import { BACKEND_URL } from '../config';
 
 const FileUpload = () => {
   const { groupId } = useParams();
@@ -16,9 +17,13 @@ const FileUpload = () => {
   const [showModal, setShowModal] = useState(false);
   const [fileToDelete, setFileToDelete] = useState(null);
 
+  useEffect(() => {
+    fetchFiles();
+  }, [groupId]);
+
   const fetchFiles = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/v1/files/${groupId}/view`);
+      const response = await axios.get(`${BACKEND_URL}/api/v1/files/${groupId}/view`);
       const sortedFiles = response.data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       setFileList(sortedFiles);
       setDisplayedFiles(sortedFiles);
@@ -27,10 +32,6 @@ const FileUpload = () => {
       console.error(err);
     }
   };
-
-  useEffect(() => {
-    fetchFiles();
-  }, [groupId]);
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
@@ -50,10 +51,8 @@ const FileUpload = () => {
     formData.append('title', fileTitle);
 
     try {
-      await axios.post(`http://localhost:5000/api/v1/files/${groupId}/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      await axios.post(`${BACKEND_URL}/api/v1/files/${groupId}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       setUploadMessage('File uploaded successfully!');
       setError('');
@@ -70,7 +69,7 @@ const FileUpload = () => {
     if (!fileToDelete) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/v1/files/${fileToDelete}`);
+      await axios.delete(`${BACKEND_URL}/api/v1/files/${fileToDelete}`);
       setShowModal(false);
       fetchFiles();
     } catch (err) {
@@ -86,7 +85,8 @@ const FileUpload = () => {
     setShowModal(true);
   };
 
-  const getFileTypeIcon = (extension) => {
+  const getFileTypeIcon = (filePath) => {
+    const extension = filePath.split('.').pop().toLowerCase();
     switch (extension) {
       case 'pdf':
         return <AiFillFilePdf className="text-red-500" />;
@@ -136,11 +136,9 @@ const FileUpload = () => {
         <h2 className="text-2xl font-bold text-soft-100 mb-6">Group Media</h2>
       </div>
 
-      {/* Search and File List Section */}
       <div className="bg-zinc-900 rounded-lg shadow-lg mx-12 mt-8 p-4">
         <h4 className="text-2xl font-semibold mb-4">Shared Files</h4>
 
-        {/* Search Bar */}
         <div className="flex items-center space-x-2 mb-4">
           <input
             type="text"
@@ -157,44 +155,43 @@ const FileUpload = () => {
           </button>
         </div>
 
-        {/* File List */}
         <div className="file-list h-64 overflow-y-auto border border-none rounded-lg bg-transparent p-4 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-gray-900">
           {displayedFiles.length === 0 ? (
             <p className="text-gray-400">No matching media files found.</p>
           ) : (
             <ul className="list-none pl-5">
-              {displayedFiles.map((file) => {
-                const extension = file.filename.split('.').pop();
-                return (
-                  <li key={file._id} className="mb-4">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-2">
-                        <span>{getFileTypeIcon(extension)}</span>
-                        <span className="text-blue-600 text-xl cursor-pointer font-semibold">
-                          {file.title}
-                        </span>
-                      </div>
-                      <div className="flex space-x-2 ml-4">
-                        <button onClick={() => window.open(`http://localhost:5000/uploads/${file.filename}`, '_blank')}
-                          className="py-2 px-4 text-red-600 font-semibold rounded-md hover:underline">
-                          View
-                        </button>
-                        <button onClick={() => openModal(file._id)}
-                          className="py-2 px-4 text-red-600 font-semibold rounded-md hover:underline">
-                          Delete
-                        </button>
-                      </div>
+              {displayedFiles.map((file) => (
+                <li key={file._id} className="mb-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <span>{getFileTypeIcon(file.path)}</span>
+                      <span className="text-blue-600 text-xl cursor-pointer font-semibold">
+                        {file.title}
+                      </span>
                     </div>
-                  </li>
-                );
-              })}
+                    <div className="flex space-x-2 ml-4">
+                      <button
+                        onClick={() => window.open(file.path, '_blank')}
+                        className="py-2 px-4 text-red-600 font-semibold rounded-md hover:underline"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => openModal(file._id)}
+                        className="py-2 px-4 text-red-600 font-semibold rounded-md hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))}
             </ul>
           )}
         </div>
       </div>
 
-       {/* File Upload Section */}
-       <div className="bg-transparent p-6 rounded-lg mt-6 mx-12">
+      <div className="bg-transparent p-6 rounded-lg mt-6 mx-12">
         <h4 className="text-2xl font-semibold text-soft-100 mb-4">Upload Any File</h4>
         <form onSubmit={handleFileUpload} className="mb-4">
           <input
@@ -206,15 +203,26 @@ const FileUpload = () => {
             required
           />
           <div className="flex items-center space-x-2">
-            <input type="file" onChange={handleFileChange} className="block w-full text-sm text-gray-500 file:border file:cursor-pointer" required />
-            <button type="submit" className="py-2 px-3 bg-purple-500 text-white font-semibold rounded-md shadow hover:bg-purple-700">
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-gray-500 file:border file:cursor-pointer"
+              required
+            />
+            <button
+              type="submit"
+              className="py-2 px-3 bg-purple-500 text-white font-semibold rounded-md shadow hover:bg-purple-700"
+            >
               Upload
             </button>
           </div>
         </form>
+        {uploadMessage && <p className="text-green-400 font-semibold text-sm mt-2">{uploadMessage}</p>}
+        {error && <p className="text-red-500 font-semibold text-sm mt-2">{error}</p>}
       </div>
     </div>
   );
 };
 
 export default FileUpload;
+

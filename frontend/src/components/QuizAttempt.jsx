@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { BACKEND_URL } from '../config';
 
 const QuizAttempt = () => {
   const { groupId, quizId } = useParams();
@@ -19,7 +20,7 @@ const QuizAttempt = () => {
     const fetchQuiz = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/v1/groups/${groupId}/quizzes/${quizId}`,
+          `${BACKEND_URL}/api/v1/groups/${groupId}/quizzes/${quizId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -64,7 +65,7 @@ const QuizAttempt = () => {
 
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/v1/groups/${groupId}/quizzes/${quizId}/attempt`,
+        `${BACKEND_URL}/api/v1/groups/${groupId}/quizzes/${quizId}/attempt`,
         { answers: formattedAnswers },
         { headers: { Authorization: `Bearer ${token}` } }
       );

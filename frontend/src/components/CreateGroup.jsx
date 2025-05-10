@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
+import { BACKEND_URL } from '../config';
 
 const CreateGroup = () => {
   const [name, setName] = useState("");
@@ -13,7 +14,7 @@ const CreateGroup = () => {
     e.preventDefault();
     try {
       await axios.post(
-        "http://localhost:5000/api/v1/groups",
+        `${BACKEND_URL}/api/v1/groups`,
         {
           name,
           subject,
@@ -43,7 +44,7 @@ const CreateGroup = () => {
     e.preventDefault();
     try {
       await axios.post(
-        `http://localhost:5000/api/v1/groups/${groupId}/join`,
+        `${BACKEND_URL}/api/v1/groups/${groupId}/join`,
         {},
         {
           headers: {

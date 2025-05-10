@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { BACKEND_URL } from '../config';
 
 function JoinGroupByInvite() {
   const { groupId, token } = useParams();
@@ -25,7 +26,7 @@ function JoinGroupByInvite() {
         console.log("Group ID:", groupId);  // Log the group ID
   
         const response = await axios.post(
-          `http://localhost:5000/api/v1/groups/${groupId}/join/${token}`,
+          `${BACKEND_URL}/api/v1/groups/${groupId}/join/${token}`,
           {}, // Empty body for POST request
           {
             headers: {

@@ -1,12 +1,11 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { BACKEND_URL } from '../config';
+import ConfirmationModal from "./ConfirmationModal";
 import CopyLink from "./CopyLink";
 import GroupInfoSkeleton from "./ui/GroupInfoSkeleton";
 import { Separator } from "./ui/separator";
-import ConfirmationModal from "./ConfirmationModal";
-import InviteModal from "./InviteModal";
-
 
 const GroupInfo = () => {
   const { groupId } = useParams();
@@ -17,14 +16,13 @@ const GroupInfo = () => {
   const [error, setError] = useState("");
   const [isLeaving, setIsLeaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isInviteModalOpen, setInviteModalOpen] = useState(false);
 
   // Fetch group information on component load
   useEffect(() => {
     const fetchGroupInfo = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/v1/groups/${groupId}`,
+          `${BACKEND_URL}/api/v1/groups/${groupId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -51,7 +49,7 @@ const GroupInfo = () => {
     setIsLeaving(true);
     try {
       await axios.post(
-        `http://localhost:5000/api/v1/groups/${groupId}/leave`,
+        `${BACKEND_URL}/api/v1/groups/${groupId}/leave`,
         null,
         {
           headers: {
@@ -72,10 +70,6 @@ const GroupInfo = () => {
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
-
-  // Function to open invite modal
-  const openInviteModal = () => setInviteModalOpen(true);
-  const closeInviteModal = () => setInviteModalOpen(false);
 
   if (loading) return <GroupInfoSkeleton />;
   if (error) return <div className="text-center text-red-500">{error}</div>;
@@ -101,12 +95,9 @@ const GroupInfo = () => {
         <div className="flex justify-between items-start space-x-8">
           {/* Description Box */}
           <div className="flex-1 space-y-2">
-            
-              <h3 className="text-3xl font-semibold text-gray-100 mb-4">Description</h3>
-              
-              <p className="text-gray-300 text-lg leading-relaxed">{group.description || "No description available."}</p>
-            </div>
-          
+            <h3 className="text-3xl font-semibold text-gray-100 mb-4">Description</h3>
+            <p className="text-gray-300 text-lg leading-relaxed">{group.description || "No description available."}</p>
+          </div>
 
           {/* Share Group Box */}
           <div className="pl-5 space-y-4">
@@ -120,19 +111,17 @@ const GroupInfo = () => {
 
       {/* Members Box */}
       <div className="px-6 py-6">
-        
-          <h3 className="text-3xl font-semibold text-gray-100 mb-4">Members</h3>
-          <ul className="space-y-6 mt-4">
-            {group.members.map((member) => (
-              <li key={member._id} className="flex items-center space-x-6">
-                <div className="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center text-xl font-bold text-gray-700">
-                  {member.username.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-gray-300 text-xl font-medium">{member.username}</span>
-              </li>
-            ))}
-          </ul>
-        
+        <h3 className="text-3xl font-semibold text-gray-100 mb-4">Members</h3>
+        <ul className="space-y-6 mt-4">
+          {group.members.map((member) => (
+            <li key={member._id} className="flex items-center space-x-6">
+              <div className="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center text-xl font-bold text-gray-700">
+                {member.username.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-gray-300 text-xl font-medium">{member.username}</span>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* Confirmation Modal */}
@@ -141,19 +130,7 @@ const GroupInfo = () => {
         onConfirm={handleLeaveGroup}
         onCancel={closeModal}
       />
-
-      {/* Invite Modal (If you want to enable this feature, uncomment below) */}
-      {/* <button
-        onClick={openInviteModal}
-        className="bg-blue-600 text-white py-2 px-6 rounded-lg mt-4 ml-6 transition-all hover:bg-blue-700"
-      >
-        Invite Members
-      </button>
-      <InviteModal isOpen={isInviteModalOpen} onClose={closeInviteModal} groupId={groupId} /> */}
-
-      
     </div>
-    
   );
 };
 

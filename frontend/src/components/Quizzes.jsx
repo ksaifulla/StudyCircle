@@ -1,69 +1,7 @@
-// import React, { useEffect, useState } from 'react';
-// import axios from 'axios';
-// import { Link, useParams, useNavigate } from 'react-router-dom';
-// import { useSelector } from 'react-redux';
-
-// const Quizzes = () => {
-//   const { groupId } = useParams();
-//   const { token, user } = useSelector((state) => state.auth);
-//   const [quizzes, setQuizzes] = useState([]);
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     const fetchQuizzes = async () => {
-//       try {
-//         const res = await axios.get(`http://localhost:5000/api/v1/groups/${groupId}/quizzes`, {
-//           headers: { Authorization: `Bearer ${token}` },
-//         });
-//         setQuizzes(res.data.quizzes);
-//       } catch (err) {
-//         console.error(err);
-//       }
-//     };
-//     fetchQuizzes();
-//   }, [groupId, token]);
-
-//   return (
-//     <div className="p-6 text-white">
-//       <div className="flex justify-between items-center mb-6">
-//         <h2 className="text-2xl font-bold">Quizzes</h2>
-//         {/* Only admins or quiz creators can see create button, optional */}
-//         <button
-//           onClick={() => navigate(`/groups/${groupId}/quizzes/create`)}
-//           className="bg-green-600 px-4 py-2 rounded"
-//         >
-//           Create Quiz
-//         </button>
-//       </div>
-
-//       {quizzes.length === 0 ? (
-//         <p>No quizzes available yet!</p>
-//       ) : (
-//         <div className="space-y-4">
-//           {quizzes.map((quiz) => (
-//             <div key={quiz._id} className="border border-gray-600 p-4 rounded flex justify-between items-center">
-//               <div>
-//                 <h3 className="text-lg font-semibold">{quiz.title}</h3>
-//                 <p className="text-sm text-gray-400">Created by: {quiz.createdBy?.name || "Unknown"}</p>
-//               </div>
-//               <Link
-//                 to={`/groups/${groupId}/quizzes/${quiz._id}/attempt`}
-//                 className="bg-blue-600 px-4 py-2 rounded"
-//               >
-//                 Attempt Quiz
-//               </Link>
-//             </div>
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Quizzes;
-import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { BACKEND_URL } from '../config';
 
 const Quizzes = () => {
   const { groupId } = useParams();
@@ -75,7 +13,7 @@ const Quizzes = () => {
     const fetchQuizzes = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/v1/groups/${groupId}/quizzes`,
+          `${BACKEND_URL}/api/v1/groups/${groupId}/quizzes`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

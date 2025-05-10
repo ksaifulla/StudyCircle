@@ -1,15 +1,16 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import axios from "axios";
 import { useState } from "react";
 import { BsPlus } from "react-icons/bs";
+import { BACKEND_URL } from '../config';
 import { SideBarIcon } from "./MainSidebar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -28,7 +29,7 @@ export default function AddGroup() {
     e.preventDefault();
     try {
       await axios.post(
-        "http://localhost:5000/api/v1/groups",
+        `${BACKEND_URL}/api/v1/groups`,
         {
           name,
           subject,
@@ -58,7 +59,7 @@ export default function AddGroup() {
     e.preventDefault();
     try {
       await axios.post(
-        `http://localhost:5000/api/v1/groups/${groupId}/join`,
+        `${BACKEND_URL}/api/v1/groups/${groupId}/join`,
         {},
         {
           headers: {

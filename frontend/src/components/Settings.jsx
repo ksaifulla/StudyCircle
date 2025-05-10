@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
+import { BACKEND_URL } from '../config';
 import SettingsSidebar from "./SettingsSidebar";
 
 const Settings = ({ onClose }) => {
@@ -39,7 +40,7 @@ const Settings = ({ onClose }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.put(
-        "http://localhost:5000/api/v1/user/profile/password",
+        `${BACKEND_URL}/api/v1/user/profile/password`,
         {
           currentPassword,
           newPassword,

@@ -1,4 +1,3 @@
-const { Router } = require("express");
 const express = require("express");
 const { User } = require("../db");
 const router = express.Router();
@@ -8,36 +7,117 @@ const { JWT_SECRET } = require("../config");
 const authMiddleware = require("../middleware/auth");
 const multer = require("multer");
 const path = require("path");
+const cloudinary = require("../utils/cloudinary");
+const streamifier = require("streamifier");
 
-// Configure multer for profile picture uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/profile-pictures/"); // Directory for uploaded files
+// Multer with memory storage for Cloudinary
+const upload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png/;
+    const isMimeTypeValid = allowedTypes.test(file.mimetype);
+    const isExtNameValid = allowedTypes.test(
+      path.extname(file.originalname).toLowerCase(),
+    );
+
+    if (isMimeTypeValid && isExtNameValid) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only .jpeg, .jpg, and .png formats are allowed!"));
+    }
   },
-  filename: (req, file, cb) => {
-    cb(null, `${req.user.id}-${Date.now()}${path.extname(file.originalname)}`);
-  },
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
 });
 
-// Filter to allow only image files
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png/;
-  const isMimeTypeValid = allowedTypes.test(file.mimetype);
-  const isExtNameValid = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-
-  if (isMimeTypeValid && isExtNameValid) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only .jpeg, .jpg, and .png formats are allowed!"));
-  }
+// Helper: upload buffer to Cloudinary
+const uploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "profile-pictures" },
+      (error, result) => {
+        if (result) resolve(result);
+        else reject(error);
+      },
+    );
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
 };
 
-// Initialize multer middleware
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: 2 * 1024 * 1024 }, // Limit file size to 2MB
-});
+// Route: Upload profile picture only 
+router.post(
+  "/upload-profile-pic",
+  authMiddleware,
+  upload.single("profilePic"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const result = await uploadToCloudinary(req.file.buffer);
+
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user.id,
+        { profilePicture: result.secure_url },
+        { new: true },
+      );
+
+      res.status(200).json({
+        message: "Profile picture uploaded successfully",
+        profilePicture: result.secure_url,
+        user: updatedUser,
+      });
+    } catch (error) {
+      console.error("Upload Error:", error);
+      res.status(500).json({
+        error: "Cloudinary upload failed",
+        details: error.message,
+      });
+    }
+  },
+);
+
+// Route: Update user profile 
+router.put(
+  "/profile",
+  authMiddleware,
+  upload.single("profilePicture"),
+  async (req, res) => {
+    const { username, bio, name } = req.body;
+
+    try {
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+
+      // Upload profile picture to Cloudinary if provided
+      if (req.file) {
+        const result = await uploadToCloudinary(req.file.buffer);
+        user.profilePicture = result.secure_url;
+      }
+
+      // Update other fields if provided
+      if (username) user.username = username;
+      if (bio) user.bio = bio;
+      if (name) user.name = name;
+
+      await user.save();
+
+      const updatedUser = {
+        username: user.username,
+        bio: user.bio,
+        name: user.name,
+        profilePicture: user.profilePicture,
+      };
+
+      res.json({ message: "Profile updated successfully", user: updatedUser });
+    } catch (err) {
+      console.error("Error updating profile:", err.message);
+      res.status(500).json({ message: "Server error." });
+    }
+  },
+);
 
 // User Routes
 router.post("/signup", async (req, res) => {
@@ -62,7 +142,7 @@ router.post("/signup", async (req, res) => {
           username,
           userId,
         },
-        JWT_SECRET
+        JWT_SECRET,
       );
 
       res.json({
@@ -91,7 +171,7 @@ router.post("/signin", async (req, res) => {
     if (existingUser) {
       const validPassword = await bycrypt.compare(
         password,
-        existingUser.password
+        existingUser.password,
       );
       const userId = existingUser._id;
       if (!validPassword) {
@@ -104,7 +184,7 @@ router.post("/signin", async (req, res) => {
           username,
           userId,
         },
-        JWT_SECRET
+        JWT_SECRET,
       );
       return res.json({
         token,
@@ -120,26 +200,6 @@ router.post("/signin", async (req, res) => {
     });
   }
 });
-
-// router.get("/profile", authMiddleware, async (req, res) => {
-//   try {
-//     const username = req.user?.username; // Extract username from token
-//     if (!username) {
-//       return res.status(403).json({ message: "Username not found in token" });
-//     }
-//     const user = await User.findOne({ username }).select("-password"); // Find user by username
-
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     return res.status(200).json(user);
-//   } catch (err) {
-//     if (!res.headersSent) {
-//       return res.status(500).json({ error: err.message });
-//     }
-//   }
-// });
 
 // Update user password
 router.put("/profile/password", authMiddleware, async (req, res) => {
@@ -171,7 +231,7 @@ router.put("/profile/password", authMiddleware, async (req, res) => {
         username,
         userId,
       },
-      JWT_SECRET
+      JWT_SECRET,
     );
     return res.json({
       token,
@@ -185,52 +245,25 @@ router.put("/profile/password", authMiddleware, async (req, res) => {
 router.get("/profile", authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
+
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
-    res.json(user);
+
+    // Append /uploads/ if profilePicture exists
+    const isFullUrl = (str) => /^https?:\/\//i.test(str);
+
+    const profilePicturePath = user.profilePicture
+      ? isFullUrl(user.profilePicture)
+        ? user.profilePicture // keep full URL 
+        : `/uploads/${user.profilePicture}` // local file
+      : null;
+
+    res.json({ ...user.toObject(), profilePicture: profilePicturePath });
   } catch (err) {
     console.error("Error fetching profile:", err.message);
     res.status(500).json({ message: "Server error." });
   }
 });
-
-// Route to update user profile (PUT)
-router.put("/profile", authMiddleware, upload.single("profilePicture"), async (req, res) => {
-  const { username, bio, name } = req.body;
-  const profilePicture = req.file ? `/uploads/profile-pictures/${req.file.filename}` : undefined;
-
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });   
-    }
-
-    // Update fields if provided
-    if (username) user.username = username;
-    if (bio) user.bio = bio;
-    if (name) user.name = name;  // Add the name field update
-    if (profilePicture) user.profilePicture = profilePicture;
-
-    await user.save();
-
-    const updatedUser = {
-      username: user.username,
-      bio: user.bio,
-      name: user.name,  // Include name in the response
-      profilePicture: user.profilePicture,
-    };
-
-    res.json({ message: "Profile updated successfully", user: updatedUser });
-  } catch (err) {
-    console.error("Error updating profile:", err.message);
-    res.status(500).json({ message: "Server error." });
-  }
-});
-
-
-
-
-
 
 module.exports = router;

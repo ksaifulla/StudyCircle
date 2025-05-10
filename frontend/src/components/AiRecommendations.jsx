@@ -1,5 +1,6 @@
-import { useState } from "react";
 import axios from "axios";
+import { useState } from "react";
+import { BACKEND_URL } from '../config';
 
 const AiRecommendations = ({ groupActivityText }) => {
   const [suggestions, setSuggestions] = useState("");
@@ -8,7 +9,7 @@ const AiRecommendations = ({ groupActivityText }) => {
   const fetchSuggestions = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(`http://localhost:5000/api/v1/${groupId}/recommendations`, {
+      const response = await axios.post(`${BACKEND_URL}/api/v1/${groupId}/recommendations`, {
         groupActivityText,
       });
 

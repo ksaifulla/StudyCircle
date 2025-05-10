@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { BACKEND_URL } from '../config';
 
 const EditNote = ({ noteId, onClose }) => {
   const [content, setContent] = useState("");
@@ -12,7 +13,7 @@ const EditNote = ({ noteId, onClose }) => {
   useEffect(() => {
     const fetchNote = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/v1/groups/notes/${noteId}`, {
+        const response = await axios.get(`${BACKEND_URL}/api/v1/groups/notes/${noteId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -31,7 +32,7 @@ const EditNote = ({ noteId, onClose }) => {
   const handleSaveNote = async () => {
     try {
       await axios.put(
-        `http://localhost:5000/api/v1/groups/notes/${noteId}`,
+        `${BACKEND_URL}/api/v1/groups/notes/${noteId}`,
         { content },
         {
           headers: {

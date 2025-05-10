@@ -1,6 +1,6 @@
-export const BACKEND_URL = "http://localhost:5000";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { BACKEND_URL } from '../config';
 
 export const useGroup = ({ id }) => {
   const [group, setGroup] = useState();

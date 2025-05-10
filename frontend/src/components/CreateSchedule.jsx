@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
+import { BACKEND_URL } from '../config';
 
 const CreateSchedule = () => {
   const { groupId } = useParams();
@@ -15,7 +16,7 @@ const CreateSchedule = () => {
     e.preventDefault();
     try {
       await axios.post(
-        `http://localhost:5000/api/v1/groups/${groupId}/schedules`,
+        `${BACKEND_URL}/api/v1/groups/${groupId}/schedules`,
         { title, description, deadline },
         {
           headers: {

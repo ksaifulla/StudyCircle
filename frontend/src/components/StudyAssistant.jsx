@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { BACKEND_URL } from '../config';
 import { useAIChat } from "../context/AIChatContext";
 
 const StudyAssistant = () => {
@@ -19,10 +20,7 @@ const StudyAssistant = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(
-        `http://localhost:5000/api/v1/groups/${groupId}/recommendations`,
-        { message: input }
-      );
+      const res = await axios.post(`${BACKEND_URL}/api/v1/groups/${groupId}/recommendations`, { message: input });
 
       const aiMessage = { sender: "ai", text: res.data.reply };
       setConversation((prev) => [...prev, aiMessage]);

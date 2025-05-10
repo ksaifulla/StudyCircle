@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { BACKEND_URL } from '../config';
 import EditNote from "./EditNote";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 
@@ -13,7 +14,7 @@ const GroupNotes = ({ groupId }) => {
     const fetchNotes = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/v1/groups/${groupId}/notes`,
+          `${BACKEND_URL}/api/v1/groups/${groupId}/notes`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,

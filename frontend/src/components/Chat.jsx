@@ -1,12 +1,13 @@
 import axios from "axios";
+import EmojiPicker from 'emoji-picker-react'; // Importing the EmojiPicker component
 import { useEffect, useState } from "react";
+import { BACKEND_URL } from '../config';
 import useSocket from "../hooks/useSocket";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
-import EmojiPicker from 'emoji-picker-react'; // Importing the EmojiPicker component
 
 const Chat = ({ userId, groupId }) => {
-  const socket = useSocket("http://localhost:5000");
+  const socket = useSocket(BACKEND_URL);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -22,7 +23,7 @@ const Chat = ({ userId, groupId }) => {
     const fetchMessages = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/v1/groups/${groupId}/messages`,
+          `${BACKEND_URL}/api/v1/groups/${groupId}/messages`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,

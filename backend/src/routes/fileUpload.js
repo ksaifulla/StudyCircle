@@ -1,124 +1,132 @@
-// Import dependencies
-const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const File = require('../db').File;
+const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const File = require("../db").File;
+const cloudinary = require("../utils/cloudinary");
+const streamifier = require("streamifier");
 
 const router = express.Router();
 
-// Configure storage settings for multer
-const storage = multer.diskStorage({
-  destination: './uploads/', // Folder to save files
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}_${file.originalname}`); // Unique filename
-  }
-});
+// File filter
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = /jpeg|jpg|png|pdf|docx|pptx|ppt/;
+  const mimeTypes =
+    /image\/jpeg|image\/jpg|image\/png|application\/pdf|application\/vnd.openxmlformats-officedocument.wordprocessingml.document|application\/vnd.ms-powerpoint|application\/vnd.openxmlformats-officedocument.presentationml.presentation/;
 
-// Initialize multer with file size limit and type filter
+  const isValidExtension = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase(),
+  );
+  const isValidMime = mimeTypes.test(file.mimetype);
+
+  if (isValidExtension && isValidMime) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only images, PDFs, and document files are allowed!"));
+  }
+};
+
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10000000 }, // Max 10MB
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|pdf|docx|pptx|ppt/;
-    const mimeTypes = /image\/jpeg|image\/jpg|image\/png|application\/pdf|application\/vnd.openxmlformats-officedocument.wordprocessingml.document|application\/vnd.ms-powerpoint|application\/vnd.openxmlformats-officedocument.presentationml.presentation/;
+  storage: multer.memoryStorage(), // Keep in memory before uploading to Cloudinary
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter,
+}).single("file");
 
-    const isValidExtension = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const isValidMime = mimeTypes.test(file.mimetype);
-    
-    // If both the extension and MIME type are valid
-    if (isValidExtension && isValidMime) {
-      cb(null, true); // Accept the file
-    } else {
-      cb(new Error('Only images, PDFs, and document files are allowed!')); // Reject the file
-    }
-  }
-}).single('file'); // Handle single file uploads
-
-
-// Route to upload file
-router.post('/:groupId/upload', (req, res) => {
+// Upload route
+router.post("/:groupId/upload", (req, res) => {
   upload(req, res, async (err) => {
-    if (err) {
-      console.error("Upload error:", err);
-      return res.status(400).json({ error: `Upload error: ${err}` });
-    }
-    if (!req.file) {
-      console.error("No file received");
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
+    if (err)
+      return res.status(400).json({ error: `Upload error: ${err.message}` });
 
-    // Extract the title from req.body
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
     const { title } = req.body;
-
-    // Check if title is provided
-    if (!title) {
-      return res.status(400).json({ error: 'Title is required' });
-    }
+    if (!title) return res.status(400).json({ error: "Title is required" });
 
     try {
+      // Upload to Cloudinary using a stream
+      const streamUpload = () => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { resource_type: "auto", folder: "group-files" },
+            (error, result) => {
+              if (result) resolve(result);
+              else reject(error);
+            },
+          );
+          streamifier.createReadStream(req.file.buffer).pipe(stream);
+        });
+      };
+
+      const result = await streamUpload();
+
       const fileData = new File({
-        filename: req.file.filename,
-        path: req.file.path,
+        filename: req.file.originalname,
+        path: result.secure_url,
+        public_id: result.public_id,
         groupId: req.params.groupId,
-        title: title,
+        title,
         size: req.file.size,
         timestamp: Date.now(),
       });
 
       await fileData.save();
       res.status(200).json({
-        message: 'File uploaded and metadata saved successfully',
-        file: req.file.filename,
+        message: "File uploaded to Cloudinary and metadata saved",
+        file: result.secure_url,
       });
     } catch (error) {
-      console.error("Database error while saving file metadata:", error);
-      res.status(500).json({ error: 'Database error while saving file metadata', details: error.message });
+      console.error("Upload/DB Error:", error);
+      res
+        .status(500)
+        .json({ error: "Upload or DB error", details: error.message });
     }
   });
 });
 
-// Route to list files for a specific group
-router.get('/:groupId/view', async (req, res) => {
+// View route
+router.get("/:groupId/view", async (req, res) => {
   try {
     const files = await File.find({ groupId: req.params.groupId });
     res.status(200).json(files);
   } catch (error) {
-    res.status(500).json({ error: 'Error retrieving files' });
+    res.status(500).json({ error: "Error retrieving files" });
   }
 });
 
-// Route to delete a file
-router.delete('/:fileId', async (req, res) => {
+// Delete route
+router.delete("/:fileId", async (req, res) => {
   try {
-    const result = await File.findByIdAndDelete(req.params.fileId);
-    
-    if (!result) {
-      return res.status(404).json({ error: 'File not found' });
+    const file = await File.findByIdAndDelete(req.params.fileId);
+
+    if (!file) return res.status(404).json({ error: "File not found" });
+
+    // Delete from Cloudinary if it has public_id
+    if (file.public_id) {
+      await cloudinary.uploader.destroy(file.public_id, {
+        resource_type: "auto",
+      });
     }
 
-    res.status(200).json({ message: 'File deleted successfully' });
+    res.status(200).json({ message: "File deleted successfully" });
   } catch (error) {
-    console.error("Error deleting file:", error);
-    res.status(500).json({ error: 'Error deleting file', details: error.message });
+    console.error("Delete error:", error);
+    res
+      .status(500)
+      .json({ error: "Error deleting file", details: error.message });
   }
 });
 
-
-// Search Files API
+// Search route
 router.get("/search", async (req, res) => {
   try {
     const { query } = req.query;
-
-    if (!query) {
+    if (!query)
       return res.status(400).json({ message: "Search query is required" });
-    }
 
-    // Search by filename or title
     const results = await File.find({
       $or: [
-        { filename: { $regex: query, $options: "i" } }, // Search in filename
-        { title: { $regex: query, $options: "i" } }, // Search in title
+        { filename: { $regex: query, $options: "i" } },
+        { title: { $regex: query, $options: "i" } },
       ],
     });
 

@@ -1,5 +1,6 @@
-import { useState } from "react";
 import axios from "axios";
+import { useState } from "react";
+import { BACKEND_URL } from '../config';
 
 const InviteModal = ({ isOpen, onClose, groupId }) => {
   // Define inviteEmail state
@@ -15,7 +16,7 @@ const InviteModal = ({ isOpen, onClose, groupId }) => {
     setIsSending(true);
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/v1/groups/${groupId}/invite`,
+        `${BACKEND_URL}/api/v1/groups/${groupId}/invite`,
         { email: inviteEmail },
         {
           headers: {
