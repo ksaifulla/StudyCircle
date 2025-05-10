@@ -27,7 +27,10 @@ export const Auth = ({ type }) => {
     try {
       const res = await axios.post(
         `${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`,
-        postInputs
+        postInputs,
+        {
+          withCredentials: true,
+        }
       );
 
       if (res.status === 200 && res.data.token) {
