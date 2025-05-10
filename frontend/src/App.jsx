@@ -14,7 +14,7 @@ import Settings from "./components/Settings";
 import ShowGroups from "./components/ShowGroups";
 import { Signin } from "./pages/Signin";
 import { Signup } from "./pages/Signup";
-import { Profile } from "./components/Profile";
+//import { Profile } from "./components/Profile";
 import CustomNavbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import FileUpload from "./components/FileUpload";
@@ -24,7 +24,7 @@ import CreateQuiz from "./components/CreateQuiz";
 import QuizAttempt from "./components/QuizAttempt";
 import Whiteboard from "./components/Whiteboard";
 import StudyAssistant from "./components/StudyAssistant";
-import VideoCall from "./components/VideoCall"; 
+import VideoCall from "./components/VideoCall";
 
 const isAuthenticated = () => {
   return localStorage.getItem("token") !== null;
@@ -51,7 +51,6 @@ function App() {
           <Route path="/dashboard" element={<PrivateRoute element={<Dashboard />} />} />
           <Route path="/create" element={<PrivateRoute element={<CreateGroup />} />} />
           <Route path="/groups" element={<PrivateRoute element={<ShowGroups />} />} />
-          <Route path="/profile" element={<PrivateRoute element={<Profile />} />} />
           <Route path="/group/:groupId" element={<PrivateRoute element={<GroupInfo />} />} />
           <Route path="/group/:groupId/upload" element={<PrivateRoute element={<FileUpload />} />} />
           <Route path="/group/:groupId/schedule" element={<PrivateRoute element={<Schedule />} />} />
@@ -65,18 +64,18 @@ function App() {
           <Route path="/group/:groupId/quizzes/:quizId/attempt" element={<PrivateRoute element={<QuizAttempt />} />} />
           <Route path="/settings" element={<PrivateRoute element={<Settings />} />} />
 
-          
 
-          <Route path="/group/:groupId/whiteboard" element={<PrivateRoute element={<Whiteboard/>} />} />
 
-          
+          <Route path="/group/:groupId/whiteboard" element={<PrivateRoute element={<Whiteboard />} />} />
+
+
 
           <Route
-  path="/group/:groupId/recommendations"
-  element={<PrivateRoute element={<StudyAssistant />} />}
-/>
+            path="/group/:groupId/recommendations"
+            element={<PrivateRoute element={<StudyAssistant />} />}
+          />
 
-<Route path="/group/:groupId/video-call" element={<PrivateRoute element={<VideoCall />} />} />
+          <Route path="/group/:groupId/video-call" element={<PrivateRoute element={<VideoCall />} />} />
 
         </Route>
 
