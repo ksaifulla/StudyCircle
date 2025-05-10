@@ -6,6 +6,7 @@ const initializeSocket = require("./utils/socket");
 const userRouter = require("./routes/user");
 const groupRouter = require("./routes/groups");
 const fileUploadRoutes = require("./routes/fileUpload");
+const {PORT} = require("./config")
 
 
 const app = express();
@@ -29,7 +30,6 @@ app.use('/api/v1/files', fileUploadRoutes);  // Mount file upload routes
 const server = http.createServer(app);
 initializeSocket(server);  // Pass server instead of app
 
-const PORT = 5000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
