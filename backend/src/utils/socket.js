@@ -11,11 +11,13 @@ const initializeSocket = (server) => {
     },
   });
 
-  /*** 📌 Socket.IO Connection ***/
+  // Track users in each video call room
+  const videoCallUsers = {}; // { roomName: Set(socketIds) }
+
   io.on("connection", (socket) => {
     console.log("New client connected:", socket.id);
 
-    /*** ✅ CHAT FEATURE ***/
+    /*** CHAT FEATURE ***/
     socket.on("joinGroup", async ({ groupId, userId }) => {
       try {
         const group = await StudyGroup.findById(groupId);
@@ -42,11 +44,7 @@ const initializeSocket = (server) => {
           });
         }
 
-        const message = new Message({
-          group: groupId,
-          sender: userId,
-          content,
-        });
+        const message = new Message({ group: groupId, sender: userId, content });
         await message.save();
 
         const user = await User.findById(userId);
@@ -80,8 +78,64 @@ const initializeSocket = (server) => {
       }
     });
 
-    /*** ✅ WHITEBOARD FEATURE ***/
+    /*** VIDEO CALLING FEATURE ***/
+    socket.on("join-video-call", ({ groupId, userId }) => {
+      const roomName = `video-${groupId}`;
 
+      // Init room tracking
+      if (!videoCallUsers[roomName]) videoCallUsers[roomName] = new Set();
+
+      // Prevent duplicate joins
+      if (videoCallUsers[roomName].has(socket.id)) return;
+
+      socket.join(roomName);
+      videoCallUsers[roomName].add(socket.id);
+
+      const room = io.sockets.adapter.rooms.get(roomName);
+      const otherUsers = room ? Array.from(room).filter(id => id !== socket.id) : [];
+
+      socket.emit("existing-users-in-call", { users: otherUsers });
+
+      socket.to(roomName).emit("user-joined-call", {
+        socketId: socket.id,
+        userId,
+      });
+    });
+
+    socket.on("video-offer", ({ groupId, offer, to }) => {
+      try {
+        io.to(to).emit("video-offer", { offer, from: socket.id });
+      } catch (err) {
+        console.error("Error in video-offer:", err);
+      }
+    });
+
+    socket.on("video-answer", ({ groupId, answer, to }) => {
+      try {
+        io.to(to).emit("video-answer", { answer, from: socket.id });
+      } catch (err) {
+        console.error("Error in video-answer:", err);
+      }
+    });
+
+    socket.on("ice-candidate", ({ groupId, candidate, to }) => {
+      try {
+        io.to(to).emit("ice-candidate", { candidate, from: socket.id });
+      } catch (err) {
+        console.error("Error in ice-candidate:", err);
+      }
+    });
+
+    socket.on("leave-video-call", ({ groupId }) => {
+      const roomName = `video-${groupId}`;
+      socket.leave(roomName);
+      if (videoCallUsers[roomName]) {
+        videoCallUsers[roomName].delete(socket.id);
+      }
+      socket.to(roomName).emit("user-left-call", { socketId: socket.id });
+    });
+
+    /*** WHITEBOARD FEATURE ***/
     socket.on("join-whiteboard-room", ({ groupId }) => {
       socket.join(groupId);
       console.log(`Socket ${socket.id} joined whiteboard room: ${groupId}`);
@@ -99,11 +153,18 @@ const initializeSocket = (server) => {
       socket.to(groupId).emit("whiteboardUndo", actionId);
     });
 
-    /*** ✅ DISCONNECT CLEANUP ***/
+    /*** DISCONNECT CLEANUP ***/
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
+      for (const roomName in videoCallUsers) {
+        if (videoCallUsers[roomName].has(socket.id)) {
+          videoCallUsers[roomName].delete(socket.id);
+          socket.to(roomName).emit("user-left-call", { socketId: socket.id });
+        }
+      }
     });
   });
 };
 
 module.exports = initializeSocket;
+
