@@ -32,6 +32,7 @@ const CreateGroup = () => {
       setSubject("");
       setDescription("");
     } catch (err) {
+      console.error(err);
       setError(
         err.response?.data?.message ||
           "An error occurred while creating the group",

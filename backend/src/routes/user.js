@@ -155,6 +155,7 @@ router.post("/signup", async (req, res) => {
       });
     }
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       msg: "An error occurred during signup",
       error: error.message,

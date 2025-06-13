@@ -56,7 +56,7 @@ export default function GroupSidebar({ groupId, name }) {
               isActive={location.pathname === `group/${groupId}/quizzes`}
             />
             <SidebarElement
-              text="VC"
+              text="Video Call"
               toNavigate={`group/${groupId}/video-call`}
               icon={<FaVideo size="20" />}
               isActive={location.pathname === `group/${groupId}/video-call`}

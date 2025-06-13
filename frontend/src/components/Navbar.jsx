@@ -19,6 +19,16 @@ const CustomNavbar = () => {
           >
             Home
           </a>
+          <a
+            href="/profile"
+            className={`text-white no-underline ${
+              location.pathname === '/profile'
+                ? 'font-bold text-yellow-400'
+                : 'hover:underline'
+            }`}
+          >
+            Profile
+          </a>
         </div>
       </div>
     </nav>

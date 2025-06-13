@@ -130,6 +130,19 @@ const FileUpload = () => {
     }
   };
 
+  const formatDateTime = (timestamp) => {
+  const date = new Date(timestamp);
+
+  return date.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
   return (
     <div className="mx-auto text-white bg-gradient-to-b from-fuchsia-900 via-zinc-800 to-gray-900 shadow-lg w-full rounded-tl-lg rounded-tr-lg">
       <div className="bg-soft-500 p-4">
@@ -168,6 +181,9 @@ const FileUpload = () => {
                       <span className="text-blue-600 text-xl cursor-pointer font-semibold">
                         {file.title}
                       </span>
+                      <span className="text-sm text-gray-400">
+    {formatDateTime(file.timestamp)}
+  </span>
                     </div>
                     <div className="flex space-x-2 ml-4">
                       <button

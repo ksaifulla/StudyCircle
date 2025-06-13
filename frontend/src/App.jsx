@@ -14,11 +14,10 @@ import Settings from "./components/Settings";
 import ShowGroups from "./components/ShowGroups";
 import { Signin } from "./pages/Signin";
 import { Signup } from "./pages/Signup";
-//import { Profile } from "./components/Profile";
+import { Profile } from "./components/Profile";
 import CustomNavbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import FileUpload from "./components/FileUpload";
-import JoinGroupByInvite from "./components/JoinGroupByInvite"; // Invite Link Component
 import Quizzes from "./components/Quizzes";
 import CreateQuiz from "./components/CreateQuiz";
 import QuizAttempt from "./components/QuizAttempt";
@@ -51,6 +50,7 @@ function App() {
           <Route path="/dashboard" element={<PrivateRoute element={<Dashboard />} />} />
           <Route path="/create" element={<PrivateRoute element={<CreateGroup />} />} />
           <Route path="/groups" element={<PrivateRoute element={<ShowGroups />} />} />
+           <Route path="/profile" element={<PrivateRoute element={<Profile />} />} />
           <Route path="/group/:groupId" element={<PrivateRoute element={<GroupInfo />} />} />
           <Route path="/group/:groupId/upload" element={<PrivateRoute element={<FileUpload />} />} />
           <Route path="/group/:groupId/schedule" element={<PrivateRoute element={<Schedule />} />} />

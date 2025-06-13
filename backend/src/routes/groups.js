@@ -381,10 +381,9 @@ router.post("/:groupId/recommendations", async (req, res) => {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    const groupContext = `You are a helpful AI assistant for the study group "${group.name}".
-The group's focus is: "${group.description}". Use this to give relevant, intelligent answers.`;
+   
 
-    const reply = await askGemini(message, groupContext); // pass context separately
+    const reply = await askGemini(message); 
 
     res.json({ reply });
   } catch (err) {

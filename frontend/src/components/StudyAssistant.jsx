@@ -41,52 +41,50 @@ const StudyAssistant = () => {
   }, [conversation, loading]);
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-900 text-white p-4">
-      <div className="w-full max-w-3xl h-[90vh] bg-gradient-to-b from-fuchsia-900 via-zinc-800 to-gray-900 rounded-lg shadow-2xl flex flex-col p-4">
-        <h2 className="text-2xl font-semibold mb-4 text-center">
-          EduMate - Your AI Based Study Assistant
-        </h2>
+    <div className="w-full max-h-[90vh] mx-auto bg-gradient-to-b from-fuchsia-900 via-zinc-800 to-gray-900 shadow-2xl flex flex-col p-4">
+      <h2 className="text-3xl font-bold mb-4 text-center text-white">
+        EduMate - Your AI Based Study Assistant
+      </h2>
 
-        <div className="flex-1 overflow-y-auto space-y-4 mb-4 px-2">
-          {conversation.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`max-w-[70%] p-3 rounded-lg break-words ${
-                msg.sender === "user"
-                  ? "bg-purple-700 ml-auto text-right"
-                  : "bg-gray-800 mr-auto text-left"
-              }`}
-            >
-              {msg.text.split('\n').map((line, i) => (
-  line.trim() !== "" && (
-    <p key={i} className="mb-1">
-      {msg.sender === "ai" ? `• ${line}` : line}
-    </p>
-  )
-))}
-            </div>
-          ))}
-          {loading && (
-            <div className="text-gray-400 text-sm italic">EduMate is typing...</div>
-          )}
-          <div ref={bottomRef}></div>
-        </div>
-
-        <div className="mt-auto">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="What can I help you with ?"
-            className="w-full p-2 rounded text-black resize-none"
-            rows={3}
-          />
-          <button
-            onClick={handleAsk}
-            className="mt-2 px-4 py-2 bg-purple-700 rounded hover:bg-purple-800 float-right"
+      <div className="flex-1 overflow-y-auto space-y-4 mb-4 px-2">
+        {conversation.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`max-w-[70%] p-3 rounded-lg break-words ${
+              msg.sender === "user"
+                ? "bg-purple-400 ml-auto text-right"
+                : "bg-gray-400 mr-auto text-left"
+            }`}
           >
-            Send
-          </button>
-        </div>
+            {msg.text.split('\n').map((line, i) =>
+              line.trim() !== "" && (
+                <p key={i} className="mb-1">
+                  {msg.sender === "ai" ? `• ${line}` : line}
+                </p>
+              )
+            )}
+          </div>
+        ))}
+        {loading && (
+          <div className="text-gray-400 text-sm italic">EduMate is typing...</div>
+        )}
+        <div ref={bottomRef}></div>
+      </div>
+
+      <div className="mt-2">
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="What can I help you with ?"
+          className="w-full p-2 rounded text-black resize-none"
+          rows={3}
+        />
+        <button
+          onClick={handleAsk}
+          className="mt-2 px-4 py-2 bg-purple-700 rounded hover:bg-purple-800 float-right"
+        >
+          Send
+        </button>
       </div>
     </div>
   );

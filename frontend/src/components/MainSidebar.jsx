@@ -33,7 +33,7 @@ export default function MainSidebar() {
       <h1 className="text-white">Groups</h1>
     </div>
   )}
-        {!loading &&
+        {!loading && 
           groups.map((group) => (
             <GroupAvatar
               key={group._id}
